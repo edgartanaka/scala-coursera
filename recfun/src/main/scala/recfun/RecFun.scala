@@ -42,9 +42,9 @@ object RecFun extends RecFunInterface {
    */
   def countChange(money: Int, coins: List[Int]): Int = {
     if(money == 0)
-      1
+      1 // we have found one valid combination of coins
     else if (coins.isEmpty || money < 0)
-      0
+      0 // impossible to provide valid solution
     else {
       // variations with 0 coins of head + variations with 1 coin of head
       countChange(money, coins.tail) + countChange(money - coins.head, coins)
