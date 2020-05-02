@@ -40,8 +40,8 @@ object Anagrams extends AnagramsInterface {
 
   /** Converts a sentence into its character occurrence list. */
   def sentenceOccurrences(s: Sentence): Occurrences = {
-    val allWordsConcatenated: String = s.reduce((x,y) => x.concat(y))
-    wordOccurrences(allWordsConcatenated)
+    if(s.isEmpty) List()
+    else wordOccurrences(s.reduce((x,y) => x.concat(y)))
   }
 
   /** The `dictionaryByOccurrences` is a `Map` from different occurrences to a sequence of all
@@ -101,20 +101,6 @@ object Anagrams extends AnagramsInterface {
     }
     iter(occurrences, List(List()))
   }
-//  def combinations(occurrences: Occurrences): List[Occurrences] = {
-//    val acc = List(List())
-//    val tuples = for {
-//      o <- occurrences
-//      i <- 1 to o._2
-//    } yield (o._1, i)
-//
-//    val newOccurences = for {
-//      t <- tuples
-//      o <- acc
-//    } yield o ++ List(t)
-//
-//    newOccurences
-//  }
 
   /**
    * Appends a tuple at the end of every Occurences but it also keeps a copy of the original acc
@@ -143,15 +129,6 @@ object Anagrams extends AnagramsInterface {
    *      List(('a', 2), ('b', 1)),
    *    )
    */
-//  def addTupples(tuples: List[(Char, Int)], acc: List[Occurrences]): List[Occurrences] = {
-//    if(tuples.isEmpty) acc
-//    else {
-//      val tuple = tuples.head
-//      val newAcc = acc ++ acc.map(x => x ++ List(tuple))
-//      addTupples(tuples.tail, newAcc)
-//    }
-//  }
-
   def addTupples(tuples: List[(Char, Int)], acc: List[Occurrences]): List[Occurrences] = {
     val newOccurences = for {
       t <- tuples
@@ -173,7 +150,10 @@ object Anagrams extends AnagramsInterface {
    *  Note: the resulting value is an occurrence - meaning it is sorted
    *  and has no zero-entries.
    */
-  def subtract(x: Occurrences, y: Occurrences): Occurrences = ???
+  def subtract(x: Occurrences, y: Occurrences): Occurrences = {
+    val yMap = y.toMap
+    x.map(z => (z._1, z._2 - yMap.getOrElse(z._1, 0))).filter(z => z._2 > 0)
+  }
 
   /** Returns a list of all anagram sentences of the given sentence.
    *
@@ -215,7 +195,20 @@ object Anagrams extends AnagramsInterface {
    *
    *  Note: There is only one anagram of an empty sentence.
    */
-  def sentenceAnagrams(sentence: Sentence): List[Sentence] = ???
+  def sentenceAnagrams(sentence: Sentence): List[Sentence] = {
+    def recur(occurrences: Occurrences): List[Sentence] = {
+      if (occurrences.isEmpty) List(Nil)
+      else for {
+        comb <- combinations(occurrences)
+        word <- dictionaryByOccurrences.getOrElse(comb, Nil)
+        rest <- recur(subtract(occurrences, wordOccurrences(word)))
+        if !comb.isEmpty
+      }
+        yield word :: rest
+    }
+
+    recur(sentenceOccurrences(sentence))
+  }
 }
 
 object Dictionary {
